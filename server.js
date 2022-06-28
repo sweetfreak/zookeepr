@@ -1,9 +1,9 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const {animals} = require('./data/animals');
 
 const PORT = process.env.PORT || 3001;
-
 const app = express();
 
 //this makes it so the data sent via a POST is readable by the server - see 11.2.5
@@ -12,17 +12,6 @@ app.use(express.urlencoded({ extended: true }));
 //parse incoming JSON data
 app.use(express.json());
 
-const {animals} = require('./data/animals');
-
-app.get('/api/animals', (req, res) => {
-    let results = animals;
-
-    if (req.query) {
-        results = filterByQuery(req.query, results);
-    };
-    
-    res.json(results);
-});
 
 function findById(id, animalsArray) {
     const result = animalsArray.filter(animal => animal.id === id)[0];
@@ -42,35 +31,6 @@ function createNewAnimal(body, animalsArray) {
     //return finished code to post route for response
     return animal;
 }
-
-app.get('/api/animals/:id', (req, res) => {
-    const result = findById(req.params.id, animals);
-   if (result) {
-    res.json(result);
-   } else {
-    res.send(404);
-   }
-});
-
-app.post('/api/animals', (req, res) => {
-    //req.body is where our incoming content will be
-    //set id based on what the next index of the array will be
-    req.body.id = animals.length.toString();
-
-    //if any data in req.body is incorrect, send 400 error back
-    if (!validateAnimal(req.body)) {
-        res.status(400).send('The animal is not properly formatted')
-    } else {
-        //add animal to json file and animals array in this function
-        const animal = createNewAnimal(req.body, animals);
-
-        res.json(animal);
-    }
-})
-
-app.listen(PORT, () => {
-    console.log(`API Server now on port ${PORT}!`);
-})
 
 function filterByQuery(query, animalsArray) {
     let personalityTraitsArray = [];
@@ -124,3 +84,42 @@ function validateAnimal(animal) {
     }
     return true;
 }
+
+app.get('/api/animals', (req, res) => {
+    let results = animals;
+
+    if (req.query) {
+        results = filterByQuery(req.query, results);
+    };
+    
+    res.json(results);
+});
+
+app.get('/api/animals/:id', (req, res) => {
+    const result = findById(req.params.id, animals);
+   if (result) {
+    res.json(result);
+   } else {
+    res.send(404);
+   }
+});
+
+app.post('/api/animals', (req, res) => {
+    //req.body is where our incoming content will be
+    //set id based on what the next index of the array will be
+    req.body.id = animals.length.toString();
+
+    //if any data in req.body is incorrect, send 400 error back
+    if (!validateAnimal(req.body)) {
+        res.status(400).send('The animal is not properly formatted')
+    } else {
+        //add animal to json file and animals array in this function
+        const animal = createNewAnimal(req.body, animals);
+
+        res.json(animal);
+    }
+})
+
+app.listen(PORT, () => {
+    console.log(`API Server now on port ${PORT}!`);
+})
